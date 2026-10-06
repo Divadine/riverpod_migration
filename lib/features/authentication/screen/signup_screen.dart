@@ -98,18 +98,28 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     isLoading: state.isLoading,
                     onPressed: _onSignup,
                   ),
+                  SizedBox(height: 100,),
+
+                  AuthBottomLink(
+                    text: 'You already have a account ?',
+                    linkText: 'Login',
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          AuthBottomLink(
-            text: 'You already have a account ?',
-            linkText: 'Login',
-            onTap: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-            ),
-          ),
+          // AuthBottomLink(
+          //   text: 'You already have a account ?',
+          //   linkText: 'Login',
+          //   onTap: () => Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (_) => const LoginScreen()),
+          //   ),
+          // ),
         ],
       ),
     );

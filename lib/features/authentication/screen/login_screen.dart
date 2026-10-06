@@ -76,18 +76,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     isLoading: state.isLoading,
                     onPressed: _onLogin,
                   ),
+
+                  SizedBox(height: 200,),
+                  AuthBottomLink(
+                    text: "You don't have an account ?",
+                    linkText: 'Sign up',
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignupScreen()),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          AuthBottomLink(
-            text: "You don't have an account ?",
-            linkText: 'Sign up',
-            onTap: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const SignupScreen()),
-            ),
-          ),
+
         ],
       ),
     );
