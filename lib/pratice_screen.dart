@@ -75,7 +75,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   ],
                 ),
               ),
-              SubmitButton(title: 'Signup', onPressed: () {}, isLoading: false,),
+              AppButton(title: 'Signup',  isLoading: false, onTap: () {  },),
             ],
           ),
         ),

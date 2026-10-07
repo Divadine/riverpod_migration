@@ -24,7 +24,7 @@ class AuthHeader extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          color:Colors.yellow, //kPrimaryRed,
+          color: kPrimaryRed,
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 30),
           child: SafeArea(
             bottom: false,

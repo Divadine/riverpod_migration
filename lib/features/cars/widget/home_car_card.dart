@@ -14,7 +14,7 @@ class HomeCarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 2nd card paadhi theriya: 28 = 16 padding + 12 gap
+
     final width = (MediaQuery.of(context).size.width - 28) / 1.5;
 
     return CarCardShell(
@@ -40,6 +40,7 @@ class HomeCarCard extends StatelessWidget {
               Expanded(
                   child: CarInfoItem(
                       icon: Icons.currency_rupee, text: car.price)),
+              //Spacer(),
               const SizedBox(width: 8),
               SizedBox(
                 width: 80,
@@ -52,6 +53,7 @@ class HomeCarCard extends StatelessWidget {
           Row(
             children: [
               Expanded(child: CarInfoItem(icon: Icons.speed, text: car.km)),
+              //Spacer(),
               const SizedBox(width: 8),
               SizedBox(
                 width: 80,

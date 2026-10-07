@@ -65,7 +65,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          AuthHeader(title: mode.title, subtitle: mode.subtitle),
+          AuthHeader(title: mode.title(), subtitle: mode.subtitle()),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 24, 18, 20),
@@ -93,10 +93,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     onCountryChanged: (v) => setState(() => country = v),
                   ),
                   const SizedBox(height: 28),
-                  SubmitButton(
-                    title: mode.buttonText,
+                  AppButton(
+                    title: mode.buttonText(),
                     isLoading: state.isLoading,
-                    onPressed: _onSignup,
+                     onTap: _onSignup,
                   ),
                   SizedBox(height: 100,),
 

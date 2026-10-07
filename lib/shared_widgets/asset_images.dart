@@ -7,5 +7,6 @@ class AssetImages {
 
   //svg
   static const String editPen = "assets/images/editPen.svg";
+  static const String closeIcon = "assets/images/closeIcon.svg";
 
 }

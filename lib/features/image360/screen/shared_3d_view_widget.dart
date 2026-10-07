@@ -59,6 +59,9 @@ class _App3DViewerState extends State<App3DViewer> {
             width: widget.width,
             height: widget.height,
             child: Flutter3DViewer(
+
+
+
               controller: controller,
               src: widget.src,
               onProgress: (value){

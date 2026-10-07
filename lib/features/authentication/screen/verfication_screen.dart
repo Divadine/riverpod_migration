@@ -83,10 +83,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                     },
                   ),
                   const SizedBox(height: 28),
-                  SubmitButton(
+                  AppButton(
+
                     title: 'Verify',
                     isLoading: state.isLoading,
-                    onPressed: notifier.verify,
+                    onTap: notifier.verify,
                   ),
                   const SizedBox(height: 16),
                   Row(

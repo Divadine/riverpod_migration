@@ -1,13 +1,26 @@
-enum AuthMode { login, signup }
+enum AuthMode {
+  login,
+  signup;
 
-extension AuthModeX on AuthMode {
-  String get title => this == AuthMode.login ? 'Login' : 'Sign up';
+  String title() {
+    if (this == AuthMode.login) {
+      return 'Login';
+    } else {
+      return 'Sign up';
+    }
+  }
 
-  String get subtitle => this == AuthMode.login
-      ? 'Enter your registered phone number to login.'
-      : 'Create your account with your phone number.';
+  String subtitle() {
+    if (this == AuthMode.login) {
+      return 'Enter your registered phone number to login.';
+    } else {
+      return 'Create your account with your phone number.';
+    }
+  }
 
-  String get buttonText => title;
+  String buttonText() {
+    return title();
+  }
 }
 
 class AuthTexts {
