@@ -2,8 +2,7 @@ import 'package:riverpod_learning/features/compare/models/car_model.dart';
 
 
 
-/// Dummy repository. Replace the bodies with your API / Firestore calls,
-/// the providers and UI do not need any change.
+
 class CarRepository {
   static const _carImg = 'assets/cars/car.png';
   static const _delay = Duration(milliseconds: 250);

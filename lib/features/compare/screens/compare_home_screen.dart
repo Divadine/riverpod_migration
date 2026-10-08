@@ -15,9 +15,6 @@ class CompareHomeScreen extends ConsumerWidget {
   /// Popular / Recent card width as a fraction of the screen width.
   static const double _pairWidthFactor = 0.82;
 
-  /// Share of the free height given to the slot row (design: 140 vs 123+123).
-  static const double _slotShare = 0.363;
-
   void _openSelect(BuildContext context, int index) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => SelectCarScreen(slotIndex: index)),
@@ -46,8 +43,6 @@ class CompareHomeScreen extends ConsumerWidget {
     final recent = ref.watch(recentCompareProvider);
 
     final width = MediaQuery.sizeOf(context).width;
-    final textScale =
-    MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3).toDouble();
 
     // 16 left padding, 6px gap between cards, ~10px of the 3rd card peeks in
     const hPad = 16.0;
@@ -55,10 +50,6 @@ class CompareHomeScreen extends ConsumerWidget {
     const peek = 10.0;
     final slotWidth = (width - hPad - peek - 2 * gap) / 2;
     final pairWidth = width * _pairWidthFactor;
-
-    // fixed vertical spacing (all the SizedBoxes + button) + 3 section titles
-    const spacing = 14 + 10 + 12 + 40 + 14 + 10 + 14 + 10 + 14; // = 138
-    final fixed = spacing + 3 * 20 * textScale;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -72,141 +63,108 @@ class CompareHomeScreen extends ConsumerWidget {
 
           Expanded(
             child: LayoutBuilder(builder: (context, box) {
-              // split the free height between slot row and the 2 pair rows
-              final free = box.maxHeight - fixed;
-              final slotHeight =
-              (free * _slotShare).clamp(120.0, slotWidth * 1.2).toDouble();
-              final pairHeight = ((free - slotHeight) / 2)
-                  .clamp(150.0, pairWidth * 0.62)
-                  .toDouble();
+              // Sum of all fixed spacing, text title heights, and button height (~175px)
+              const fixedSpacing = 175.0;
+              final free = (box.maxHeight - fixedSpacing).clamp(150.0, 1000.0);
+              final slotHeight = (free * 0.32).clamp(90.0, 150.0);
+              final pairHeight = ((free - slotHeight) / 2).clamp(90.0, 160.0);
 
-              return Stack(
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // scrolls only if the screen is too small to fit everything
-                  SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
-                        // ------------ COMPARE CARS ------------
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('Compare cars',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.text)),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: slotHeight,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            padding:
-                            const EdgeInsets.symmetric(horizontal: hPad),
-                            clipBehavior: Clip.none,
-                            itemCount: slots.length,
-                            separatorBuilder: (_, __) =>
-                            const SizedBox(width: gap),
-                            itemBuilder: (context, i) {
-                              return SizedBox(
-                                width: slotWidth,
-                                child: CompareSlotCard(
-                                  car: slots[i],
-                                  showLeadingVs: i > 0,
-                                  hasTrailingVs: i < slots.length - 1,
-                                  onTap: () => _openSelect(context, i),
-                                  onRemove: () => ref
-                                      .read(compareSlotsProvider.notifier)
-                                      .clearSlot(i),
-                                ),
-                              );
-                            },
+                  // ------------ COMPARE CARS ------------
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('Compare cars',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.text)),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: slotHeight,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: hPad),
+                      clipBehavior: Clip.none,
+                      itemCount: slots.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: gap),
+                      itemBuilder: (context, i) {
+                        return SizedBox(
+                          width: slotWidth,
+                          child: CompareSlotCard(
+                            car: slots[i],
+                            showLeadingVs: i > 0,
+                            hasTrailingVs: i < slots.length - 1,
+                            onTap: () => _openSelect(context, i),
+                            onRemove: () => ref
+                                .read(compareSlotsProvider.notifier)
+                                .clearSlot(i),
                           ),
-                        ),
-
-                        // ------------ COMPARE BUTTON ------------
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 40,
-                            child: ElevatedButton(
-                              onPressed: canCompare
-                                  ? () => _compare(context, ref)
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                disabledBackgroundColor: AppColors.disabled,
-                                disabledForegroundColor: AppColors.grey2,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: const Text('Compare',
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500)),
-                            ),
-                          ),
-                        ),
-
-                        // ------------ POPULAR ------------
-                        SectionHeader(
-                            title: 'Popular Compare', onSeeAll: () {}),
-                        const SizedBox(height: 10),
-                        popular.when(
-                          data: (list) => _PairList(
-                              pairs: list,
-                              cardWidth: pairWidth,
-                              height: pairHeight),
-                          loading: () => SizedBox(
-                            height: pairHeight,
-                            child: const Center(
-                                child: CircularProgressIndicator(
-                                    color: AppColors.primary)),
-                          ),
-                          error: (e, _) => SizedBox(
-                              height: pairHeight,
-                              child:
-                              const Center(child: Text('Unable to load'))),
-                        ),
-
-                        // ------------ RECENT ------------
-                        const SizedBox(height: 14),
-                        SectionHeader(
-                            title: 'Recent Compare', onSeeAll: () {}),
-                        const SizedBox(height: 10),
-                        _PairList(
-                            pairs: recent,
-                            cardWidth: pairWidth,
-                            height: pairHeight),
-                        const SizedBox(height: 14),
-                      ],
+                        );
+                      },
                     ),
                   ),
 
-                  // soft shadow under the pinned header
-                  const Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 8,
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Color(0x14000000), Color(0x00000000)],
-                          ),
+                  // ------------ COMPARE BUTTON ------------
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 38,
+                      child: ElevatedButton(
+                        onPressed: canCompare
+                            ? () => _compare(context, ref)
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppColors.disabled,
+                          disabledForegroundColor: AppColors.grey2,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
                         ),
+                        child: const Text('Compare',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500)),
                       ),
                     ),
                   ),
+
+                  // ------------ POPULAR ------------
+                  SectionHeader(title: 'Popular Compare', onSeeAll: () {}),
+                  const SizedBox(height: 8),
+                  popular.when(
+                    data: (list) => _PairList(
+                        pairs: list,
+                        cardWidth: pairWidth,
+                        height: pairHeight),
+                    loading: () => SizedBox(
+                      height: pairHeight,
+                      child: const Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.primary)),
+                    ),
+                    error: (e, _) => SizedBox(
+                        height: pairHeight,
+                        child:
+                        const Center(child: Text('Unable to load'))),
+                  ),
+
+                  // ------------ RECENT ------------
+                  const SizedBox(height: 10),
+                  SectionHeader(title: 'Recent Compare', onSeeAll: () {}),
+                  const SizedBox(height: 8),
+                  _PairList(
+                      pairs: recent,
+                      cardWidth: pairWidth,
+                      height: pairHeight),
+                  const SizedBox(height: 8),
                 ],
               );
             }),

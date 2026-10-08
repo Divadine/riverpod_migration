@@ -31,52 +31,31 @@ class CompareSlotCard extends StatelessWidget {
   static const double _closeGap = 4; // clear space between border and button
   static const double _notch = _closeSize + _closeGap; // 24
 
-  // VS cut: badge radius (19) + 3px clear space
-  static const double _vsCutRadius = VsBadge.size / 2 + 1;
+  static const double _vsNotchRadius = 16.0;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // white body + very soft shadow (kept low so it never tints the
-        // neighbouring card's border)
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(_radius),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x14000000),
-                  blurRadius: 14,
-                  spreadRadius: -2,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-          ),
-        ),
         Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onTap,
             child: DottedBorderBox(
               radius: _radius,
+              fillColor: Colors.white,
               cornerNotch: car != null ? _notch : null,
-              cutouts: [
-                if (hasTrailingVs)
-                  const NotchCut(
-                      alignment: Alignment.centerRight,
-                      offset: Offset(3, 0),
-                      radius: _vsCutRadius),
-                if (showLeadingVs)
-                  const NotchCut(
-                      alignment: Alignment.centerLeft,
-                      offset: Offset(-3, 0),
-                      radius: _vsCutRadius),
-              ],
-              child: car == null ? const _EmptySlot() : _FilledSlot(car: car!),
+              hasLeftNotch: showLeadingVs,
+              hasRightNotch: hasTrailingVs,
+              vsNotchRadius: _vsNotchRadius,
+              child: car == null
+                  ? const _EmptySlot()
+                  : _FilledSlot(
+                      car: car!,
+                      showLeadingVs: showLeadingVs,
+                      hasTrailingVs: hasTrailingVs,
+                    ),
             ),
           ),
         ),
@@ -103,11 +82,20 @@ class CompareSlotCard extends StatelessWidget {
           ),
         if (showLeadingVs)
           const Positioned(
-            left: -22,
+            left: -23,
             top: 0,
             bottom: 0,
-            width: 38,
-            child: Center(child: VsBadge()),
+            width: 40,
+            child: Center(
+              child: Text(
+                'VS',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
       ],
     );
@@ -179,20 +167,27 @@ class _PlusPainter extends CustomPainter {
 // ============================================================
 
 class _FilledSlot extends StatelessWidget {
-  const _FilledSlot({required this.car});
+  const _FilledSlot({
+    required this.car,
+    required this.showLeadingVs,
+    required this.hasTrailingVs,
+  });
 
   final SelectedCar car;
+  final bool showLeadingVs;
+  final bool hasTrailingVs;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, outer) {
-      // car image scales with the card (shadow ~75% of card width)
-      final carH = (outer.maxWidth * 0.5).clamp(60.0, 100.0).toDouble();
+      final carH = (outer.maxWidth * 0.48).clamp(50.0, 90.0).toDouble();
+
+      final leftPad = showLeadingVs ? 20.0 : 12.0;
+      final rightPad = hasTrailingVs ? 20.0 : 12.0;
 
       return Padding(
-        padding: const EdgeInsets.fromLTRB(14, 2, 14, 10),
+        padding: EdgeInsets.fromLTRB(leftPad, 4, rightPad, 8),
         child: LayoutBuilder(builder: (context, inner) {
-          // FittedBox(scaleDown) = never overflows, even with big text scale
           return FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.topLeft,
@@ -209,46 +204,46 @@ class _FilledSlot extends StatelessWidget {
                       shadowColor: const Color(0xFFD9D9D9),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(car.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          fontSize: 14,
-                          height: 1.25,
+                          fontSize: 13,
+                          height: 1.2,
                           fontWeight: FontWeight.w500,
                           color: AppColors.text)),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 3),
                   Text(car.subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          fontSize: 12, height: 1.25, color: AppColors.grey2)),
-                  const SizedBox(height: 10),
+                          fontSize: 11, height: 1.2, color: AppColors.grey2)),
+                  const SizedBox(height: 8),
                   PriceRow(
                     price: car.price,
-                    fontSize: 12,
-                    symbolSize: 15,
+                    fontSize: 11,
+                    symbolSize: 14,
                     symbolWeight: FontWeight.w400,
-                    gap: 8,
+                    gap: 6,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   Row(
                     children: [
                       Flexible(
                         child: IconLabel(
                             icon: Icons.local_gas_station_outlined,
                             label: car.variant.fuel,
-                            fontSize: 12,
-                            iconSize: 16),
+                            fontSize: 11,
+                            iconSize: 14),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Flexible(
                         child: IconLabel(
                             icon: Icons.settings_outlined,
                             label: car.variant.transmission,
-                            fontSize: 12,
-                            iconSize: 16),
+                            fontSize: 11,
+                            iconSize: 14),
                       ),
                     ],
                   ),

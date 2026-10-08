@@ -26,13 +26,7 @@ class ComparePairCard extends StatelessWidget {
           border: Border.all(color: AppColors.border2, width: 1.0),
         ),
         child: LayoutBuilder(builder: (context, box) {
-          final h = box.maxHeight;
-          // text block (title + subtitle + price) is ~78px tall incl. padding
-          const textBlock = 78.0;
-          final imageArea = (h - textBlock).clamp(40.0, 400.0);
           final carHeight = (width * 0.26).clamp(56.0, 100.0);
-          // centre of the image area, minus half the 40px halo
-          final vsTop = textBlock + imageArea / 2 - 20;
 
           return Stack(
             children: [
@@ -52,10 +46,7 @@ class ComparePairCard extends StatelessWidget {
                 ],
               ),
               // white halo so the divider stops just before the dashed ring
-              Positioned(
-                top: vsTop,
-                left: 0,
-                right: 0,
+              Positioned.fill(
                 child: Center(
                   child: Container(
                     width: 40,

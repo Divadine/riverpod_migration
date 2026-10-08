@@ -4,24 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_learning/core/theme/color.dart';
 
 // ============================================================
-// DOTTED BORDER (rounded rect / circle when radius = size / 2)
+// DOTTED BORDER (rounded rect with optional VS notches)
 // ============================================================
-
-/// A circular region where the dotted border is removed. Dashes touching
-/// this circle are skipped, so the border visibly stops before it.
-class NotchCut {
-  const NotchCut({
-    required this.alignment,
-    this.offset = Offset.zero,
-    required this.radius,
-  });
-
-  final Alignment alignment;
-  final Offset offset;
-  final double radius;
-
-  Offset centerIn(Size size) => alignment.alongSize(size) + offset;
-}
 
 class DottedBorderBox extends StatelessWidget {
   const DottedBorderBox({
@@ -30,10 +14,12 @@ class DottedBorderBox extends StatelessWidget {
     this.radius = 12,
     this.color = AppColors.primary,
     this.fillColor,
-    this.strokeWidth = 1.3,
-    this.dash = 2.5,
+    this.strokeWidth = 1.5,
+    this.dash = 2,
     this.gap = 2.5,
-    this.cutouts = const [],
+    this.hasLeftNotch = false,
+    this.hasRightNotch = false,
+    this.vsNotchRadius = 16.0,
     this.cornerNotch,
     this.notchRadius = 5,
   });
@@ -45,26 +31,48 @@ class DottedBorderBox extends StatelessWidget {
   final double strokeWidth;
   final double dash;
   final double gap;
-  final List<NotchCut> cutouts;
+  final bool hasLeftNotch;
+  final bool hasRightNotch;
+  final double vsNotchRadius;
 
-  /// Square notch (size in px) taken out of the top-right corner. The border
-  /// runs around it with rounded corners (used for the close button).
   final double? cornerNotch;
   final double notchRadius;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _DottedPainter(color, radius, fillColor, strokeWidth, dash, gap,
-          cutouts, cornerNotch, notchRadius),
+      painter: _DottedPainter(
+        color,
+        radius,
+        fillColor,
+        strokeWidth,
+        dash,
+        gap,
+        hasLeftNotch,
+        hasRightNotch,
+        vsNotchRadius,
+        cornerNotch,
+        notchRadius,
+      ),
       child: child,
     );
   }
 }
 
 class _DottedPainter extends CustomPainter {
-  _DottedPainter(this.color, this.radius, this.fill, this.stroke, this.dash,
-      this.gap, this.cutouts, this.cornerNotch, this.notchRadius);
+  _DottedPainter(
+    this.color,
+    this.radius,
+    this.fill,
+    this.stroke,
+    this.dash,
+    this.gap,
+    this.hasLeftNotch,
+    this.hasRightNotch,
+    this.vsNotchRadius,
+    this.cornerNotch,
+    this.notchRadius,
+  );
 
   final Color color;
   final double radius;
@@ -72,37 +80,88 @@ class _DottedPainter extends CustomPainter {
   final double stroke;
   final double dash;
   final double gap;
-  final List<NotchCut> cutouts;
+  final bool hasLeftNotch;
+  final bool hasRightNotch;
+  final double vsNotchRadius;
   final double? cornerNotch;
   final double notchRadius;
 
   Path _outline(Rect rect) {
+    final l = rect.left;
+    final t = rect.top;
+    final r = rect.right;
+    final b = rect.bottom;
+    final cr = math.min(radius, math.min(rect.width, rect.height) / 2);
+    final cy = rect.center.dy;
+    final vr = math.min(vsNotchRadius, rect.height / 2 - cr);
+
+    final path = Path();
+
+    // Start top-left (after top-left corner)
+    path.moveTo(l + cr, t);
+
+    // Top edge & top-right corner
     final n = cornerNotch;
-    if (n == null) {
-      return Path()
-        ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+    if (n != null && n > 0) {
+      final nr = notchRadius;
+      path.lineTo(r - n - nr, t);
+      path.arcToPoint(Offset(r - n, t + nr),
+          radius: Radius.circular(nr), clockwise: true);
+      path.lineTo(r - n, t + n - nr);
+      path.arcToPoint(Offset(r - n + nr, t + n),
+          radius: Radius.circular(nr), clockwise: false);
+      path.lineTo(r - nr, t + n);
+      path.arcToPoint(Offset(r, t + n + nr),
+          radius: Radius.circular(nr), clockwise: true);
+    } else {
+      path.lineTo(r - cr, t);
+      path.arcToPoint(Offset(r, t + cr),
+          radius: Radius.circular(cr), clockwise: true);
     }
-    final nr = notchRadius;
-    final l = rect.left, t = rect.top, r = rect.right, b = rect.bottom;
-    final c = radius;
-    return Path()
-      ..moveTo(l + c, t)
-      ..lineTo(r - n - nr, t)
-      ..arcToPoint(Offset(r - n, t + nr),
-          radius: Radius.circular(nr), clockwise: true)
-      ..lineTo(r - n, t + n - nr)
-      ..arcToPoint(Offset(r - n + nr, t + n),
-          radius: Radius.circular(nr), clockwise: false)
-      ..lineTo(r - nr, t + n)
-      ..arcToPoint(Offset(r, t + n + nr),
-          radius: Radius.circular(nr), clockwise: true)
-      ..lineTo(r, b - c)
-      ..arcToPoint(Offset(r - c, b), radius: Radius.circular(c), clockwise: true)
-      ..lineTo(l + c, b)
-      ..arcToPoint(Offset(l, b - c), radius: Radius.circular(c), clockwise: true)
-      ..lineTo(l, t + c)
-      ..arcToPoint(Offset(l + c, t), radius: Radius.circular(c), clockwise: true)
-      ..close();
+
+    // Right edge (top to bottom)
+    if (hasRightNotch) {
+      path.lineTo(r, cy - vr);
+      path.arcToPoint(
+        Offset(r, cy + vr),
+        radius: Radius.circular(vr),
+        clockwise: false,
+      );
+      path.lineTo(r, b - cr);
+    } else {
+      path.lineTo(r, b - cr);
+    }
+
+    // Bottom-right corner
+    path.arcToPoint(Offset(r - cr, b),
+        radius: Radius.circular(cr), clockwise: true);
+
+    // Bottom edge
+    path.lineTo(l + cr, b);
+
+    // Bottom-left corner
+    path.arcToPoint(Offset(l, b - cr),
+        radius: Radius.circular(cr), clockwise: true);
+
+    // Left edge (bottom to top)
+    if (hasLeftNotch) {
+      path.lineTo(l, cy + vr);
+      path.arcToPoint(
+        Offset(l, cy - vr),
+        radius: Radius.circular(vr),
+        clockwise: false,
+      );
+      path.lineTo(l, t + cr);
+    } else {
+      path.lineTo(l, t + cr);
+    }
+
+    // Top-left corner
+    path.arcToPoint(Offset(l + cr, t),
+        radius: Radius.circular(cr), clockwise: true);
+
+    path.close();
+    return path;
   }
 
   @override
@@ -119,18 +178,8 @@ class _DottedPainter extends CustomPainter {
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.butt;
 
-    final cuts = [for (final c in cutouts) (c.centerIn(size), c.radius)];
-    bool inCut(Offset p) {
-      for (final c in cuts) {
-        if ((p - c.$1).distance < c.$2) return true;
-      }
-      return false;
-    }
-
     final period = dash + gap;
     for (final metric in path.computeMetrics()) {
-      // Fit a whole number of dashes around the contour so the pattern is
-      // evenly spaced and there is no odd-sized dash at the seam.
       final count = math.max(1, (metric.length / period).round());
       final step = metric.length / count;
       final dashLen = step * dash / period;
@@ -138,20 +187,25 @@ class _DottedPainter extends CustomPainter {
       for (var i = 0; i < count; i++) {
         final d = i * step;
         final end = d + dashLen;
-        if (cuts.isNotEmpty) {
-          final a = metric.getTangentForOffset(d)!.position;
-          final m = metric.getTangentForOffset((d + end) / 2)!.position;
-          final e = metric.getTangentForOffset(end)!.position;
-          // skip any dash touching a cut circle -> clear gap around VS
-          if (inCut(a) || inCut(m) || inCut(e)) continue;
-        }
         canvas.drawPath(metric.extractPath(d, end), paint);
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _DottedPainter o) => true;
+  bool shouldRepaint(covariant _DottedPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.radius != radius ||
+        oldDelegate.fill != fill ||
+        oldDelegate.stroke != stroke ||
+        oldDelegate.dash != dash ||
+        oldDelegate.gap != gap ||
+        oldDelegate.hasLeftNotch != hasLeftNotch ||
+        oldDelegate.hasRightNotch != hasRightNotch ||
+        oldDelegate.vsNotchRadius != vsNotchRadius ||
+        oldDelegate.cornerNotch != cornerNotch ||
+        oldDelegate.notchRadius != notchRadius;
+  }
 }
 
 // ============================================================
