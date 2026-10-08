@@ -14,6 +14,7 @@ import 'core/providers.dart';
 import 'features/auth/screens/auth_gate.dart';
 import 'features/authentication/screen/login_screen.dart';
 import 'features/car_selection/screen/types_of_cars_screen.dart';
+import 'features/compare/screens/compare_home_screen.dart';
 import 'shared_widgets/submit_button.dart';
 import 'features/car_filter_search/screen/car_search_screen.dart';
 import 'features/cars/screen/car_home_screen.dart';
@@ -32,7 +33,7 @@ void main() async {
       title: 'TaskFlow',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-      home: TypesOfCarScreen(),//CarHomeScreen(),//LoginScreen(),
+      home: CompareHomeScreen(),//TypesOfCarScreen(),//CarHomeScreen(),//LoginScreen(),
       //BrandPickerScreen()//CarHomeScreen() Scaffold(body: App3DViewer(src: 'assets/demo_3d_obj/ironman.glb',),),//CarSearchScreen()//ReelsScreen(),//Car360Screen(),
     ),
   ));
